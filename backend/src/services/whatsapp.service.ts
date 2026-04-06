@@ -1,29 +1,66 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
+import * as Twilio from 'twilio';
 
 /**
- * Service to handle raw communication with the Meta Cloud WhatsApp API.
- * In production, this would use a real Meta Token and Phone Number ID.
+ * Service to handle communication with WhatsApp.
+ * Supports both Meta Cloud API and Twilio Sandbox.
  */
 @Injectable()
 export class WhatsAppService {
   private readonly logger = new Logger(WhatsAppService.name);
-  private readonly apiUrl: string;
-  private readonly accessToken: string;
-  private readonly phoneNumberId: string;
+  private twilioClient: Twilio.Twilio;
 
   constructor(private config: ConfigService) {
-    // These would be in your .env file
-    this.apiUrl = `https://graph.facebook.com/v21.0`; 
-    this.phoneNumberId = this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') || 'YOUR_PHONE_NUMBER_ID_MOCK';
-    this.accessToken = this.config.get<string>('WHATSAPP_ACCESS_TOKEN') || 'YOUR_ACCESS_TOKEN_MOCK';
+    const twilioSid = this.config.get<string>('TWILIO_ACCOUNT_SID');
+    const twilioAuthToken = this.config.get<string>('TWILIO_AUTH_TOKEN');
+
+    if (twilioSid && twilioAuthToken && !twilioSid.includes('xxxx')) {
+      this.twilioClient = Twilio(twilioSid, twilioAuthToken);
+      this.logger.log('WhatsApp Service: Using Twilio Integration');
+    } else {
+      this.logger.log('WhatsApp Service: Using Meta Cloud API Integration');
+    }
   }
 
   /**
-   * Internal helper to send a message via Meta API.
+   * Internal helper to send a message via Meta API or Twilio.
    */
   async sendMessage(to: string, templateName: string, variables: any = {}) {
+    this.logger.debug(`[OUTBOUND] Queuing message to: ${to} (Template: ${templateName})`);
+
+    // 1. Check if using Twilio
+    if (this.twilioClient) {
+      return this.sendViaTwilio(to, templateName, variables);
+    }
+
+    // 2. Fallback to Meta Cloud API (Your existing implementation)
+    return this.sendViaMeta(to, templateName, variables);
+  }
+
+  private async sendViaTwilio(to: string, templateName: string, variables: any = {}) {
+    try {
+      const from = this.config.get('TWILIO_PHONE_NUMBER') || 'whatsapp:+14155238886';
+      
+      // For Sandbox, we map variables into a simple text message.
+      // In a real project, you would map templateName to actual template content.
+      const messageBody = `Hello! You have a wedding invitation. (Template: ${templateName})`; 
+      
+      const message = await this.twilioClient.messages.create({
+        body: messageBody,
+        from: from,
+        to: `whatsapp:${to.startsWith('+') ? to : '+' + to}`,
+      });
+
+      return { id: message.sid, status: 'SENT_TWILIO' };
+    } catch (error) {
+      this.logger.error(`Twilio Send Failure: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private async sendViaMeta(to: string, templateName: string, variables: any = {}) {
     this.logger.debug(`[OUTBOUND] Queuing message to: ${to} (Template: ${templateName})`);
 
     // FOR DEVELOPMENT: If you haven't set up Meta credentials yet, we mock the success.
