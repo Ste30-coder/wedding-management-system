@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String        @unique @db.VarChar(255)
+  password     String        @db.VarChar(255)
+  fullName     String        @db.VarChar(255)
+  phone        String?       @db.VarChar(20)
+  isVerified   Boolean       @default(false)
+  createdAt    DateTime      @default(now()) @db.Timestamptz()
+  updatedAt    DateTime      @updatedAt @db.Timestamptz()
+  deletedAt    DateTime?     @db.Timestamptz()
+  
+  weddings     Wedding[]     @relation("CreatedWeddings")
+  weddingUsers WeddingUser[]
+  campaigns    Campaign[]    @relation("Creator")
+
+  @@index([email])
+}
+
+model Wedding {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantSlug     String         @unique @db.VarChar(100)
+  brideName      String         @db.VarChar(255)
+  groomName      String         @db.VarChar(255)
+  weddingDate    DateTime?      @db.Date
+  venue          String?        @db.Text
+  whatsappConfig Json?          @db.JsonB // Encrypted credentials
+  reminderDays   Int            @default(3)
+  maxReminders   Int            @default(2)
+  createdBy      String         @db.Uuid
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now()) @db.Timestamptz()
+  updatedAt      DateTime       @updatedAt @db.Timestamptz()
+
+  creator        User           @relation("CreatedWeddings", fields: [createdBy], references: [id])
+  sides          WeddingSide[]
+  weddingUsers   WeddingUser[]
+  events         Event[]
+  guestGroups    GuestGroup[]
+  guests         Guest[]
+  campaigns      Campaign[]
+  messages       Message[]
+  rsvpResponses  RSVPResponse[]
+}
+
+model WeddingSide {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId   String   @db.Uuid
+  name        String   @db.VarChar(20) // 'bride', 'groom'
+  displayName String   @db.VarChar(100)
+  colorHex    String   @default("#0E7490") @db.VarChar(7)
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+
+  wedding     Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  events      Event[]
+  guestGroups GuestGroup[]
+  guests      Guest[]
+  campaigns   Campaign[]
+  messages    Message[]
+  rsvpResponses RSVPResponse[]
+
+  @@unique([weddingId, name])
+  @@index([weddingId])
+}
+
+enum Role {
+  WEDDING_ADMIN
+  SIDE_MANAGER
+  VIEWER
+}
+
+model WeddingUser {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId       String   @db.Uuid
+  userId          String   @db.Uuid
+  role            Role
+  assignedSideIds String[] @db.Uuid // Empty means all sides for ADMIN
+  invitedBy       String?  @db.Uuid
+  createdAt       DateTime @default(now()) @db.Timestamptz()
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([weddingId, userId])
+}
+
+model Event {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId   String     @db.Uuid
+  sideId      String?    @db.Uuid // NULL applies to both
+  name        String     @db.VarChar(255)
+  eventDate   DateTime?  @db.Date
+  eventTime   String?    @db.VarChar(20) // Stored as HH:mm
+  venue       String?    @db.Text
+  mapsLink    String?    @db.Text
+  dressCode   String?    @db.VarChar(100)
+  notes       String?    @db.Text
+  createdAt   DateTime   @default(now()) @db.Timestamptz()
+
+  wedding Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  side    WeddingSide? @relation(fields: [sideId], references: [id])
+
+  @@index([weddingId])
+  @@index([eventDate])
+}
+
+model GuestGroup {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId String   @db.Uuid
+  sideId    String   @db.Uuid
+  name      String   @db.VarChar(255)
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz()
+
+  wedding Wedding     @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  side    WeddingSide @relation(fields: [sideId], references: [id])
+  guests  Guest[]
+  rsvpResponses RSVPResponse[]
+
+  @@index([weddingId])
+  @@index([sideId])
+}
+
+model Guest {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId      String    @db.Uuid
+  sideId         String    @db.Uuid
+  groupId        String?   @db.Uuid
+  fullName       String    @db.VarChar(255)
+  phoneNumber    String    @db.VarChar(20)
+  email          String?   @db.VarChar(255)
+  relationship   String?   @db.VarChar(100)
+  tags           String[]  @default([])
+  isPrimary      Boolean   @default(false)
+  invitationSent Boolean   @default(false)
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now()) @db.Timestamptz()
+  updatedAt      DateTime  @updatedAt @db.Timestamptz()
+  deletedAt      DateTime? @db.Timestamptz()
+
+  wedding       Wedding        @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  side          WeddingSide    @relation(fields: [sideId], references: [id])
+  group         GuestGroup?    @relation(fields: [groupId], references: [id])
+  messages      Message[]
+  rsvpResponses RSVPResponse[]
+
+  @@unique([weddingId, phoneNumber])
+  @@index([weddingId])
+  @@index([sideId])
+  @@index([groupId])
+  @@index([phoneNumber])
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Campaign {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId         String         @db.Uuid
+  sideId            String?        @db.Uuid // NULL for both
+  bothSides         Boolean         @default(false)
+  name              String         @db.VarChar(255)
+  templateName      String         @db.VarChar(255)
+  templateVariables Json           @db.JsonB
+  audienceFilter    Json?          @db.JsonB
+  status            CampaignStatus @default(DRAFT)
+  scheduledAt       DateTime?      @db.Timestamptz()
+  launchedAt        DateTime?      @db.Timestamptz()
+  completedAt       DateTime?      @db.Timestamptz()
+  createdBy         String         @db.Uuid
+  createdAt         DateTime       @default(now()) @db.Timestamptz()
+
+  wedding Wedding      @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  side    WeddingSide? @relation(fields: [sideId], references: [id])
+  creator User         @relation("Creator", fields: [createdBy], references: [id])
+  messages Message[]
+  rsvpResponses RSVPResponse[]
+
+  @@index([weddingId])
+  @@index([sideId])
+}
+
+enum MessageDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  REPLIED
+}
+
+model Message {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId      String           @db.Uuid
+  sideId         String           @db.Uuid
+  guestId        String?          @db.Uuid
+  campaignId     String?          @db.Uuid
+  direction      MessageDirection
+  whatsappMsgId  String?          @unique @db.VarChar(255)
+  body           String?          @db.Text
+  status         MessageStatus    @default(QUEUED)
+  errorCode      String?          @db.VarChar(50)
+  errorMessage   String?          @db.Text
+  retryCount     Int              @default(0)
+  sentAt         DateTime?        @db.Timestamptz()
+  deliveredAt    DateTime?        @db.Timestamptz()
+  readAt         DateTime?        @db.Timestamptz()
+  createdAt      DateTime         @default(now()) @db.Timestamptz()
+
+  wedding  Wedding       @relation(fields: [weddingId], references: [id])
+  side     WeddingSide   @relation(fields: [sideId], references: [id])
+  guest    Guest?        @relation(fields: [guestId], references: [id])
+  campaign Campaign?     @relation(fields: [campaignId], references: [id])
+  rsvpResponse RSVPResponse?
+
+  @@index([weddingId])
+  @@index([guestId])
+  @@index([campaignId])
+  @@index([status])
+}
+
+enum RSVPStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  MAYBE
+  AMBIGUOUS
+  NO_REPLY
+}
+
+model RSVPResponse {
+  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  weddingId          String     @db.Uuid
+  sideId             String     @db.Uuid
+  guestId            String     @db.Uuid
+  groupId            String?    @db.Uuid
+  campaignId         String?    @db.Uuid
+  status             RSVPStatus @default(PENDING)
+  confirmedHeadcount Int        @default(0)
+  attendeeNames      String[]   @default([])
+  rawResponse        String?    @db.Text
+  responseMessageId  String?    @unique @db.Uuid
+  reminderCount      Int        @default(0)
+  lastRemindedAt     DateTime?  @db.Timestamptz()
+  respondedAt        DateTime?  @db.Timestamptz()
+  notes              String?    @db.Text
+  createdAt          DateTime   @default(now()) @db.Timestamptz()
+  updatedAt          DateTime   @updatedAt @db.Timestamptz()
+
+  wedding         Wedding   @relation(fields: [weddingId], references: [id])
+  side            WeddingSide @relation(fields: [sideId], references: [id])
+  guest           Guest     @relation(fields: [guestId], references: [id])
+  group           GuestGroup? @relation(fields: [groupId], references: [id])
+  campaign        Campaign?  @relation(fields: [campaignId], references: [id])
+  responseMessage Message?   @relation(fields: [responseMessageId], references: [id])
+
+  @@unique([guestId, campaignId])
+  @@index([weddingId])
+  @@index([sideId])
+  @@index([guestId])
+  @@index([status])
+}

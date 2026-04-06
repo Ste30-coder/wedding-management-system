@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: wedding-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: wedding_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: wedding-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+#  n8n:
+#    image: docker.n8n.io/n8nio/n8n
+#    container_name: wedding-n8n
+#    restart: always
+#    ports:
+#      - "5678:5678"
+#    environment:
+#      - N8N_BASIC_AUTH_ACTIVE=true
+#      - N8N_BASIC_AUTH_USER=admin
+#      - N8N_BASIC_AUTH_PASSWORD=password
+#      - WEBHOOK_URL=http://localhost:5678/
+#      - DATABASE_TYPE=postgresdb
+#      - DB_POSTGRESDB_HOST=db
+#      - DB_POSTGRESDB_PORT=5432
+#      - DB_POSTGRESDB_DATABASE=wedding_platform
+#      - DB_POSTGRESDB_USER=postgres
+#      - DB_POSTGRESDB_PASSWORD=password
+#    volumes:
+#      - n8n_data:/home/node/.n8n
+#    depends_on:
+#      - db
+#      - redis
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:
