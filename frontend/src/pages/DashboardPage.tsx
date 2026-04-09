@@ -2,267 +2,279 @@ import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import GuestStats from '../components/GuestStats';
 import AddGuestModal from '../components/AddGuestModal';
-import { motion } from 'framer-motion';
-import { 
-  Users, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Download,
-  Plus,
-  FileUp,
-  Send,
-  Pencil
+import {
+   Users,
+   Plus,
+   TrendingUp,
+   Gem,
+   MessageSquare
 } from 'lucide-react';
-import { useWeddingStore } from '../store/useWeddingStore';
 import { useDashboard } from '../hooks/useDashboard';
-import { useNavigate } from 'react-router-dom';
-import ImportGuestModal from '../components/ImportGuestModal';
-import EditGuestModal from '../components/EditGuestModal';
-import api from '../api';
 
 const DashboardPage: React.FC = () => {
-  const { activeSide } = useWeddingStore();
-  const { activities, loading, refresh } = useDashboard();
-  const navigate = useNavigate();
-  const isBride = activeSide === 'BRIDE';
+   const { stats, activities, loading, refresh } = useDashboard();
+   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [editingGuest, setEditingGuest] = useState<any>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-8 animate-fade-in">
-        <GuestStats />
-        
-        {/* ... previous grid content ... */}
-        {/* Skipping most of the grid for the diff, but keeping the button section */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main List Section */}
-          <section className="lg:col-span-2 space-y-6">
+   return (
+      <DashboardLayout>
+         <div className="animate-fade-in space-y-10">
+            {/* Header Section */}
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <Users className={isBride ? 'text-pink-600' : 'text-indigo-600'} size={20} />
-                Recent Guest Activity
-              </h2>
-              <div className="flex items-center gap-2">
-                <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground transition-colors" size={16} />
-                  <input 
-                    type="text" 
-                    placeholder="Search guests..."
-                    className="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <button className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
-                  <Filter size={18} className="text-slate-500" />
-                </button>
-              </div>
+               <div>
+                  <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Event Overview</h1>
+                  <p className="text-slate-500 font-medium mt-1">
+                     Manage your digital guest experience for <span className="text-[#3b0764] font-bold">The Grand Celebration.</span>
+                  </p>
+               </div>
+               <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-2 bg-[#3b0764] text-white px-8 py-4 rounded-2xl font-bold hover:shadow-xl hover:shadow-indigo-900/20 active:scale-95 transition-all"
+               >
+                  <Plus size={20} /> Add Guest
+               </button>
             </div>
 
-            <div className="premium-card !p-0 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
-              {loading ? (
-                <div className="p-10 text-center text-muted-foreground font-bold animate-pulse uppercase tracking-widest text-xs">Fetching Activity...</div>
-              ) : activities.length === 0 ? (
-                <div className="p-10 text-center text-muted-foreground font-medium uppercase tracking-widest text-xs">No recent activity</div>
-              ) : activities.map((guest, idx) => (
-                <motion.div 
-                  key={guest.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * idx }}
-                  className="flex items-center justify-between p-4 hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-all group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition-transform ${
-                       isBride ? 'bg-pink-100 text-pink-700' : 'bg-indigo-100 text-indigo-700'
-                    }`}>
-                      {guest.fullName[0]}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{guest.fullName}</h3>
-                      <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5 uppercase tracking-wide">
-                        <Users size={12} /> {guest.group?.groupName || 'Unassigned'}
-                      </p>
-                    </div>
+            {/* Global Summary Stats */}
+            <GuestStats />
+
+            {/* Sides Split Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               {/* Bride Side Card */}
+               <div className="bg-white p-10 rounded-[2.5rem] border border-[#eef2f6] shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-10 right-10 opacity-10">
+                     <Gem size={80} className="text-[#3b0764]" />
                   </div>
-                  <div className="flex items-center gap-6">
-                    <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border ${
-                      guest.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
-                      guest.status === 'DECLINED' ? 'bg-rose-100 text-rose-700 border-rose-200' : 
-                      'bg-amber-100 text-amber-700 border-amber-200'
-                    }`}>
-                      {guest.status}
-                    </div>
-                    <button 
-                      onClick={async () => {
-                         const confirmed = confirm(`🚀 Send invitation now to ${guest.fullName}?`);
-                         if (!confirmed) return;
-                         
-                         try {
-                           const res = await api.post(`/messages/send-single`, { guestId: guest.id });
-                           alert('✅ Invitation queued for: ' + guest.fullName);
-                         } catch (err: any) {
-                           alert('FAILED: ' + (err.response?.data?.message || err.message));
-                         }
-                      }}
-                      className="p-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors text-emerald-500 hover:text-emerald-700"
-                    >
-                      <Send size={18} />
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setEditingGuest(guest);
-                        setIsEditModalOpen(true);
-                      }}
-                      className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                    >
-                      <Pencil size={18} />
-                    </button>
+                  <div className="flex items-center gap-4 mb-10">
+                     <div className="w-12 h-12 rounded-2xl bg-[#3b0764] flex items-center justify-center text-white">
+                        <Users size={24} />
+                     </div>
+                     <h3 className="text-2xl font-bold text-slate-800">Bride Side</h3>
                   </div>
-                </motion.div>
-              ))}
-              <button 
-                onClick={() => navigate('/guests')}
-                className="w-full py-4 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 group"
-              >
-                View All Guests <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </section>
-
-          {/* Right Column Section */}
-          <aside className="space-y-8">
-            {/* Action Cards */}
-            <div className="space-y-4">
-               <button 
-                 onClick={() => setIsModalOpen(true)}
-                 className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black text-white text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                   isBride ? 'bg-pink-600 shadow-pink-600/20' : 'bg-indigo-600 shadow-indigo-600/20'
-                 }`}>
-                 <Plus size={20} /> Add New Guest
-               </button>
-               <button 
-                 onClick={() => setIsImportModalOpen(true)}
-                 className="w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-sm shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
-                 <FileUp size={20} /> Import Guest List
-               </button>
-               <button 
-                 onClick={async () => {
-                   if (!useWeddingStore.getState().weddingId) return alert('No wedding selected!');
-                   const confirmed = confirm('🚀 Are you sure you want to BLAST invitations to all guests on this side?');
-                   if (!confirmed) return;
-                   
-                   try {
-                     const weddingId = useWeddingStore.getState().weddingId;
-                     const sideId = useWeddingStore.getState().sideId;
-                     // 1. Create the campaign draft
-                     const camp = await api.post('/campaigns', {
-                       weddingId,
-                       sideId: sideId || undefined,
-                       name: `Mass Invitation Blast - ${new Date().toLocaleDateString()}`,
-                       templateName: 'wedding_invitation_v1',
-                       variables: { weddingName: useWeddingStore.getState().weddingName }
-                     });
-                     // 2. Launch the blast!
-                     await api.post(`/campaigns/${camp.data.id}/launch`);
-                     alert('🔥 INVITATION BLAST ACTIVATED! Your guests will receive messages shortly.');
-                   } catch (err: any) {
-                     alert('FAILED: ' + (err.response?.data?.message || err.message));
-                   }
-                 }}
-                 className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black text-white text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                   isBride ? 'bg-pink-600 shadow-pink-600/20' : 'bg-indigo-600 shadow-indigo-600/20'
-                 }`}>
-                 <Send size={20} /> Send Invitation Blast
-               </button>
-               <button className="w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black bg-slate-50 dark:bg-slate-950/50 text-slate-400 text-sm shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800 cursor-not-allowed">
-                 <Download size={20} /> Export Report
-               </button>
-            </div>
-
-            {/* Event Summary Card */}
-            <div className="premium-card space-y-6">
-              <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm uppercase tracking-widest">Upcoming Event</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
-                    <Calendar size={20} />
+                  <div className="grid grid-cols-3 gap-4 mb-10 border-b border-slate-50 pb-10">
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Invited</p>
+                        <p className="text-2xl font-bold text-slate-800">{stats?.totalGuests || 0}</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-[#10b981] uppercase tracking-widest mb-1.5">Confirmed</p>
+                        <p className="text-2xl font-bold text-[#10b981]">{stats?.confirmedCount || 0}</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-[#a855f7] uppercase tracking-widest mb-1.5">Pending</p>
+                        <p className="text-2xl font-bold text-[#a855f7]">{stats?.pendingCount || 0}</p>
+                     </div>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-0.5">Sangeet Night</h4>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 uppercase font-medium">May 15, 2026</p>
+                     <div className="flex items-center justify-between text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2.5">
+                        <span>RSVP Progress</span>
+                        <span className="text-slate-800 font-bold">{Math.round((stats?.confirmedCount || 0) / (stats?.totalGuests || 1) * 100)}%</span>
+                     </div>
+                     <div className="h-3 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#3b0764] rounded-full" style={{ width: `${Math.round((stats?.confirmedCount || 0) / (stats?.totalGuests || 1) * 100)}%` }} />
+                     </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
-                    <MapPin size={20} />
+               </div>
+
+               {/* Groom Side Card */}
+               <div className="bg-white p-10 rounded-[2.5rem] border border-[#eef2f6] shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-10 right-10 opacity-10">
+                     <TrendingUp size={80} className="text-[#facc15]" />
+                  </div>
+                  <div className="flex items-center gap-4 mb-10">
+                     <div className="w-12 h-12 rounded-2xl bg-[#facc15] flex items-center justify-center text-white">
+                        <Users size={24} />
+                     </div>
+                     <h3 className="text-2xl font-bold text-slate-800">Groom Side</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mb-10 border-b border-slate-50 pb-10">
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Invited</p>
+                        <p className="text-2xl font-bold text-slate-800">0</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-[#10b981] uppercase tracking-widest mb-1.5">Confirmed</p>
+                        <p className="text-2xl font-bold text-[#10b981]">0</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-[#f59e0b] uppercase tracking-widest mb-1.5">Pending</p>
+                        <p className="text-2xl font-bold text-[#f59e0b]">0</p>
+                     </div>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-0.5">The Oberoi Grand</h4>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 uppercase font-medium underline cursor-pointer">View Directions</p>
+                     <div className="flex items-center justify-between text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2.5">
+                        <span>RSVP Progress</span>
+                        <span className="text-slate-800 font-bold">0%</span>
+                     </div>
+                     <div className="h-3 w-full bg-[#f1f5f9] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#facc15] rounded-full" style={{ width: '0%' }} />
+                     </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
-                    <Clock size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-0.5">7:00 PM onwards</h4>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 uppercase font-medium">Arrival at 6:45 PM</p>
-                  </div>
-                </div>
-              </div>
+               </div>
             </div>
-          </aside>
-        </div>
-      </div>
 
-      <AddGuestModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={() => refresh()} 
-      />
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               {/* RSVP Distribution */}
+               <div className="bg-white p-10 rounded-[2.5rem] border border-[#eef2f6] shadow-sm">
+                  <h3 className="text-xl font-bold text-slate-900 mb-8">RSVP Distribution</h3>
+                  <div className="flex items-center justify-around h-[300px]">
+                     <div className="relative w-48 h-48">
+                        <svg className="w-full h-full transform -rotate-90">
+                           <circle cx="96" cy="96" r="80" className="stroke-[#f1f5f9]" strokeWidth="24" fill="transparent" />
+                           <circle cx="96" cy="96" r="80" className="stroke-[#3b0764]" strokeWidth="24" fill="transparent"
+                              strokeDasharray="502.4"
+                              strokeDashoffset={502.4 - (502.4 * (stats?.confirmedCount || 0) / (stats?.totalGuests || 1))}
+                              strokeLinecap="round"
+                           />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                           <p className="text-3xl font-bold text-slate-900 leading-none">{stats?.totalGuests || 0}</p>
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Total</p>
+                        </div>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-6">
+                           <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-[#3b0764]" />
+                              <span className="text-sm font-bold text-slate-500">Confirmed</span>
+                           </div>
+                           <span className="text-sm font-black text-slate-900 ml-auto">{Math.round((stats?.confirmedCount || 0) / (stats?.totalGuests || 1) * 100)}%</span>
+                        </div>
+                        <div className="flex items-center gap-6">
+                           <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-[#10b981]" />
+                              <span className="text-sm font-bold text-slate-500">Declined</span>
+                           </div>
+                           <span className="text-sm font-black text-slate-900 ml-auto">{Math.round((stats?.declinedCount || 0) / (stats?.totalGuests || 1) * 100)}%</span>
+                        </div>
+                        <div className="flex items-center gap-6">
+                           <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-[#f1f5f9]" />
+                              <span className="text-sm font-bold text-slate-500">Pending</span>
+                           </div>
+                           <span className="text-sm font-black text-slate-900 ml-auto">{Math.round((stats?.pendingCount || 0) / (stats?.totalGuests || 1) * 100)}%</span>
+                        </div>
+                     </div>
+                  </div>
+               </div>
 
-      <ImportGuestModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSuccess={() => refresh()}
-      />
+               {/* Response Trend */}
+               <div className="bg-white p-10 rounded-[2.5rem] border border-[#eef2f6] shadow-sm">
+                  <div className="flex items-center justify-between mb-8">
+                     <h3 className="text-xl font-bold text-slate-900">Response Trend (7 Days)</h3>
+                     <div className="px-2 py-1 bg-slate-100 rounded-md text-[9px] font-black text-slate-500 uppercase tracking-widest">REAL-TIME</div>
+                  </div>
+                  <div className="flex items-end justify-between h-[300px] px-4 pb-4">
+                     {[10, 15, 25, 45, 35, 60, activities.length * 2].map((h, i) => (
+                        <div key={i} className="flex flex-col items-center gap-4 w-12 group">
+                           <div className="w-full bg-[#3b0764] rounded-xl group-hover:bg-[#4c1d95] transition-all hover:scale-x-110" style={{ height: `${Math.min(h * 4, 300)}px`, opacity: 0.3 + (h / 100) }} />
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][i]}
+                           </span>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            </div>
 
-      <EditGuestModal
-        guest={editingGuest}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onSuccess={() => refresh()}
-      />
-    </DashboardLayout>
-  );
+            {/* Bottom Lists Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+               {/* Recent Responses */}
+               <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-[#eef2f6] shadow-sm">
+                  <div className="flex items-center justify-between mb-8">
+                     <h3 className="text-xl font-bold text-slate-900">Recent Responses (Live)</h3>
+                     <button className="text-xs font-bold text-[#3b0764] hover:underline">View All</button>
+                  </div>
+                  <table className="w-full">
+                     <thead>
+                        <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">
+                           <th className="text-left pb-5 font-black">Guest Name</th>
+                           <th className="text-left pb-5 font-black">Group</th>
+                           <th className="text-left pb-5 font-black">Status</th>
+                           <th className="text-left pb-5 font-black">Action</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-50">
+                        {loading ? (
+                           [...Array(5)].map((_, i) => (
+                              <tr key={i} className="animate-pulse">
+                                 <td className="py-5 bg-slate-50 rounded-lg mb-2 h-10 w-full" colSpan={4} />
+                              </tr>
+                           ))
+                        ) : activities.length === 0 ? (
+                           <tr>
+                              <td colSpan={4} className="py-10 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">No guest data found in project</td>
+                           </tr>
+                        ) : activities.slice(0, 8).map((guest) => (
+                           <tr key={guest.id} className="group hover:bg-slate-50/50 transition-colors">
+                              <td className="py-5">
+                                 <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ring-2 ring-white bg-indigo-100 text-indigo-700`}>
+                                       {guest.fullName.split(' ').map(n => n[0]).join('')}
+                                    </div>
+                                    <span className="text-sm font-bold text-slate-800">{guest.fullName}</span>
+                                 </div>
+                              </td>
+                              <td className="py-5 text-sm font-medium text-slate-500 italic">{guest.group?.groupName || 'No Group'}</td>
+                              <td className="py-5">
+                                 <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase border tracking-widest
+                                ${guest.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                       guest.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                          'bg-rose-50 text-rose-600 border-rose-100'}
+                             `}>
+                                    {guest.status}
+                                 </span>
+                              </td>
+                              <td className="py-5 text-xs font-bold text-slate-400 font-mono">
+                                 Live
+                              </td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+               </div>
+
+               {/* Event Timeline */}
+               <div className="bg-white p-10 rounded-[2.5rem] border border-[#eef2f6] shadow-sm">
+                  <h3 className="text-xl font-bold text-slate-900 mb-8">Event Timeline</h3>
+                  <div className="space-y-10 relative">
+                     <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-100" />
+
+                     {[
+                        { title: 'Mehendi Ceremony', date: 'DEC 14, 2024 • 04:00 PM', location: 'Poolside Garden • 240 Guests', color: 'bg-yellow-400' },
+                        { title: 'Sangeet Night', date: 'DEC 15, 2024 • 07:00 PM', location: 'Royal Ballroom • 800 Guests', color: 'bg-[#3b0764]' },
+                        { title: 'The Wedding Muhurat', date: 'DEC 16, 2024 • 10:00 AM', location: 'Main Mandap • 1,200 Guests', color: 'bg-slate-200' }
+                     ].map((event, i) => (
+                        <div key={i} className="relative pl-8">
+                           <div className={`absolute left-0 top-1.5 w-[15px] h-[15px] rounded-full ring-4 ring-white ${event.color} z-10`} />
+                           <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{event.date}</p>
+                              <h4 className="text-base font-bold text-slate-900 mb-1">{event.title}</h4>
+                              <p className="text-[11px] text-slate-500 font-medium">{event.location}</p>
+                           </div>
+                        </div>
+                     ))}
+
+                     <button className="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-slate-500 hover:border-[#3b0764] hover:text-[#3b0764] transition-all">
+                        <Plus size={16} /> Schedule Event
+                     </button>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <AddGuestModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSuccess={() => refresh?.()}
+         />
+
+         {/* Floating Messenger Button */}
+         <button className="fixed bottom-10 right-10 w-16 h-16 bg-[#3b0764] text-white rounded-2xl shadow-2xl shadow-indigo-900/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+            <MessageSquare size={28} />
+         </button>
+      </DashboardLayout>
+   );
 };
 
 export default DashboardPage;
-
-const ChevronRight: React.FC<{ size: number, className?: string }> = ({ size, className }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="m9 18 6-6-6-6" />
-  </svg>
-);

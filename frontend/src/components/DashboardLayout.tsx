@@ -1,27 +1,28 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useWeddingStore } from '../store/useWeddingStore';
-import SideSwitcher from './SideSwitcher';
-import { 
-  Users, 
-  Send, 
-  MessageSquare, 
-  Bell, 
+import {
+  Users,
+  Send,
   LayoutDashboard,
   Settings,
-  HelpCircle,
-  LogOut
+  Bell,
+  Search,
+  Zap,
+  Calendar,
+  MessageSquare,
+  PartyPopper
 } from 'lucide-react';
 
 const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { activeSide, weddingName } = useWeddingStore();
+  const { activeSide, setActiveSide } = useWeddingStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Get real user info from storage
   let user = { fullName: 'Guest User' };
   const userJson = localStorage.getItem('wedding_user');
-  
+
   if (userJson && userJson !== 'undefined') {
     try {
       user = JSON.parse(userJson);
@@ -29,82 +30,45 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       console.error('Failed to parse user storage', e);
     }
   }
-  
-  const initials = user.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2);
-
-  const isBride = activeSide === 'BRIDE';
-
-  const handleLogout = () => {
-    localStorage.removeItem('wedding_auth_token');
-    localStorage.removeItem('wedding_user');
-    localStorage.removeItem('wedding-storage'); // Clear persisted Zustand store (stale weddingId)
-    navigate('/login');
-  };
 
   const menuItems = [
-    { icon: <LayoutDashboard size={20} />, label: 'Overview', path: '/dashboard' },
-    { icon: <Users size={20} />, label: 'Guest Management', path: '/guests' },
+    { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
+    { icon: <Users size={20} />, label: 'Guests', path: '/guests' },
     { icon: <Send size={20} />, label: 'Campaigns', path: '/campaigns' },
-    { icon: <MessageSquare size={20} />, label: 'RSVPs', path: '/rsvps' },
-    { icon: <Bell size={20} />, label: 'Reminders', path: '/reminders' },
-  ];
-
-  const currentPath = window.location.pathname;
-
-  const secondaryItems = [
+    { icon: <MessageSquare size={20} />, label: 'RSVP Analytics', path: '/rsvps' },
+    { icon: <Calendar size={20} />, label: 'Events', path: '/events' },
+    { icon: <Zap size={20} />, label: 'Automations', path: '/automations' },
     { icon: <Settings size={20} />, label: 'Settings', path: '/settings' },
-    { icon: <HelpCircle size={20} />, label: 'Support', path: '/support' },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 flex transition-all duration-700">
-      {/* Dynamic Background Gradient */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeSide}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-          className={`fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.07] ${
-            isBride ? 'bg-pink-600' : 'bg-indigo-600'
-          }`}
-          style={{
-            backgroundImage: `radial-gradient(circle at 20% 30%, ${isBride ? '#db2777' : '#4f46e5'} 0%, transparent 40%), 
-                             radial-gradient(circle at 80% 70%, ${isBride ? '#9d174d' : '#3730a3'} 0%, transparent 40%)`
-          }}
-        />
-      </AnimatePresence>
-
+    <div className="min-h-screen bg-[#fcfdfe] dark:bg-slate-950 flex font-sans">
       {/* Sidebar */}
-      <aside className="w-64 glass-effect border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-30">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-500 cursor-pointer ${
-              isBride ? 'bg-pink-500 shadow-pink-500/20' : 'bg-indigo-500 shadow-indigo-500/20'
-            }`} onClick={() => navigate('/dashboard')}>
-              <Users className="text-white" size={24} />
+      <aside className="w-[280px] bg-white dark:bg-slate-900 border-r border-[#eef2f6] dark:border-slate-800 flex flex-col fixed h-full z-30">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+              <PartyPopper className="text-[#3b0764]" size={24} />
             </div>
-            <div className="cursor-pointer" onClick={() => navigate('/dashboard')}>
-              <h1 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight -mb-0.5">Wedding Hub</h1>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Premium SaaS</span>
+            <div>
+              <h1 className="font-extrabold text-[#3b0764] text-xl leading-tight">ShaadiFlow</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">The Digital Concierge</p>
             </div>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {menuItems.map((item) => {
-              const isActive = currentPath === item.path;
+              const isActive = location.pathname === item.path;
               return (
                 <button
                   key={item.label}
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
-                    isActive 
-                      ? (isBride ? 'bg-pink-100/50 text-pink-700 shadow-sm' : 'bg-indigo-100/50 text-indigo-700 shadow-sm')
-                      : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100'
-                  }`}
+                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all group ${isActive
+                      ? 'bg-indigo-50 text-[#3b0764]'
+                      : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                    }`}
                 >
-                  <div className={`transition-colors ${isActive ? (isBride ? 'text-pink-600' : 'text-indigo-600') : 'group-hover:text-slate-700'}`}>
+                  <div className={`${isActive ? 'text-[#3b0764]' : 'text-slate-300 group-hover:text-slate-400'}`}>
                     {item.icon}
                   </div>
                   {item.label}
@@ -114,65 +78,76 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
           </nav>
         </div>
 
-        <div className="mt-auto p-6 space-y-1">
-          <div className="h-px bg-slate-200 dark:bg-slate-800 mb-6 mx-2" />
-          {secondaryItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => navigate(item.path)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100 transition-all"
-            >
-              <div className="text-slate-400">{item.icon}</div>
-              {item.label}
-            </button>
-          ))}
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-all mt-4"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
+        {/* Sidebar Footer - Profile Section */}
+        <div className="mt-auto p-4">
+          <div className="bg-[#f1f5f9] rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#3b0764] flex items-center justify-center text-xs font-black text-white">AK</div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-800 truncate">Ananya Kapoor</p>
+              <p className="text-[10px] font-medium text-slate-400">Premium Account</p>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-8 relative z-20">
-        <header className="flex items-center justify-between mb-8 max-w-7xl mx-auto">
-          <div>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 block">
-              Dashboard Overview
-            </span>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
-                {weddingName}
-              </h1>
-              <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
-                isBride ? 'bg-pink-100 text-pink-700' : 'bg-indigo-100 text-indigo-700'
-              }`}>
-                Live Event
-              </div>
-            </div>
+      {/* Main Content Area */}
+      <main className="flex-1 ml-[280px]">
+        {/* Header */}
+        <header className="h-[100px] bg-white/80 backdrop-blur-md border-b border-[#eef2f6] px-10 flex items-center justify-between sticky top-0 z-20">
+          {/* Side Switcher Pill */}
+          <div className="flex bg-[#f1f5f9] p-1.5 rounded-full border border-slate-200">
+            {['All', 'Bride Side', 'Groom Side'].map((tab) => {
+              const isSelected = (tab === 'All' && !activeSide) || (tab === 'Bride Side' && activeSide === 'BRIDE') || (tab === 'Groom Side' && activeSide === 'GROOM');
+              return (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    if (tab === 'All') setActiveSide('BRIDE', ''); // Fallback for 'All'
+                    else if (tab === 'Bride Side') setActiveSide('BRIDE', '');
+                    else if (tab === 'Groom Side') setActiveSide('GROOM', '');
+                  }}
+                  className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${isSelected
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                  {tab}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex items-center gap-6">
-            <SideSwitcher />
-            
-            <div className="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-800">
-              <div className={`w-10 h-10 rounded-full ring-2 ring-white dark:ring-slate-900 flex items-center justify-center font-bold text-white shadow-md ${
-                isBride ? 'bg-pink-500' : 'bg-indigo-500'
-              }`}>
-                {initials}
-              </div>
-              <div className="hidden lg:block text-right">
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none">{user.fullName}</p>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Wedding Admin</p>
+          {/* Search & Profile */}
+          <div className="flex items-center gap-8">
+            <div className="relative group min-w-[320px]">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3b0764] transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Search guests..."
+                className="w-full pl-12 pr-6 py-3 bg-[#f8fafc] border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#3b0764]/10 focus:bg-white focus:border-[#3b0764]/20 transition-all text-sm font-medium text-slate-800"
+              />
+            </div>
+
+            <div className="flex items-center gap-4 pl-8 border-l border-slate-200">
+              <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                <Bell size={22} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-[#facc15] flex items-center justify-center text-white font-bold shadow-lg shadow-yellow-500/10 border-2 border-white">
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=facc15&color=fff&bold=true`}
+                    className="w-full h-full rounded-full"
+                    alt="User"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto">
+        {/* Content Body */}
+        <div className="p-10 max-w-[1600px] mx-auto">
           {children}
         </div>
       </main>
@@ -181,3 +156,4 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 };
 
 export default DashboardLayout;
+
