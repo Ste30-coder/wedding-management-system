@@ -53,6 +53,7 @@
   * {
     @apply border-slate-200/60 dark:border-slate-800/60 transition-colors duration-300;
   }
+
   body {
     @apply bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans;
   }

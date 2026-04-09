@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
-import * as Twilio from 'twilio';
+import { Twilio } from 'twilio';
 
 /**
  * Service to handle communication with WhatsApp.
@@ -10,14 +10,20 @@ import * as Twilio from 'twilio';
 @Injectable()
 export class WhatsAppService {
   private readonly logger = new Logger(WhatsAppService.name);
-  private twilioClient: Twilio.Twilio;
+  private twilioClient: Twilio;
+  private readonly apiUrl = 'https://graph.facebook.com/v18.0'; // Updated to latest stable
+  private readonly phoneNumberId: string;
+  private readonly accessToken: string;
 
   constructor(private config: ConfigService) {
+    this.accessToken = this.config.get<string>('WHATSAPP_ACCESS_TOKEN') || '';
+    this.phoneNumberId = this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') || '';
+
     const twilioSid = this.config.get<string>('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = this.config.get<string>('TWILIO_AUTH_TOKEN');
 
     if (twilioSid && twilioAuthToken && !twilioSid.includes('xxxx')) {
-      this.twilioClient = Twilio(twilioSid, twilioAuthToken);
+      this.twilioClient = new Twilio(twilioSid, twilioAuthToken);
       this.logger.log('WhatsApp Service: Using Twilio Integration');
     } else {
       this.logger.log('WhatsApp Service: Using Meta Cloud API Integration');

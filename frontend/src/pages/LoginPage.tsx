@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Heart, ArrowRight, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, Sparkles, LogIn, ChevronLeft, PartyPopper } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useWeddingStore } from '../store/useWeddingStore';
 
 const LoginPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [rememberMe, setRememberMe] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,35 +20,27 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      if (isLogin) {
-        // ACTUAL LOGIN CALL
-        const response = await api.post('/auth/login', { email, password });
-        const { access_token, user, wedding } = response.data;
-        
-        // Store token in localStorage (matches Step 1 interceptor)
-        localStorage.setItem('wedding_auth_token', access_token);
-        localStorage.setItem('wedding_user', JSON.stringify(user));
+      const response = await api.post('/auth/login', { email, password });
+      const { access_token, user, wedding } = response.data;
 
-        if (wedding) {
-           const { setWedding, setActiveSide } = useWeddingStore.getState();
-           setWedding(
-             wedding.id, 
-             wedding.name, 
-             wedding.sides?.bride || '', 
-             wedding.sides?.groom || ''
-           );
-           
-           // Default to Bride side with the correct sideId from the database
-           if (wedding.sides?.bride) {
-              setActiveSide('BRIDE', wedding.sides.bride);
-           }
+      localStorage.setItem('wedding_auth_token', access_token);
+      localStorage.setItem('wedding_user', JSON.stringify(user));
+
+      if (wedding) {
+        const { setWedding, setActiveSide } = useWeddingStore.getState();
+        setWedding(
+          wedding.id,
+          wedding.name,
+          wedding.sides?.bride || '',
+          wedding.sides?.groom || ''
+        );
+
+        if (wedding.sides?.bride) {
+          setActiveSide('BRIDE', wedding.sides.bride);
         }
-        
-        navigate('/dashboard');
-      } else {
-        // TODO: Handle Register
-        console.log('Registration not implemented yet');
       }
+
+      navigate('/dashboard');
     } catch (err: any) {
       console.error('Login Error:', err);
       setError(err.response?.data?.message || 'Login failed. Check your data.');
@@ -59,132 +50,170 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-br from-pink-500/10 to-indigo-600/10 dark:from-pink-500/5 dark:to-indigo-600/5 -skew-x-12 translate-x-1/4" />
-      
-      {/* Back to Home */}
-      <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:white transition-colors group z-20">
-         <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-         <span className="text-sm font-bold uppercase tracking-widest leading-none">Back to Home</span>
-      </Link>
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      {/* Left Branding Side */}
+      <div className="w-full md:w-[55%] bg-[#3b0764] relative overflow-hidden flex flex-col justify-between p-12 md:p-24 text-white min-h-[450px] md:min-h-screen">
+        {/* Subtle Background Ornament */}
+        <div
+          className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none bg-center bg-no-repeat bg-cover scale-110"
+          style={{ backgroundImage: `url('/wedding_login_bg.png')`, filter: 'brightness(0.6)' }}
+        />
 
-      <div className="w-full max-w-xl mx-auto flex flex-col justify-center px-8 relative z-10">
-        <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20 mx-auto mb-6">
-            <Heart className="text-white fill-white" size={32} />
+        {/* Logo Section */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
+            <PartyPopper className="text-yellow-400" size={24} />
           </div>
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
-            {isLogin ? 'Welcome Back' : 'Get Started'}
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
-            {isLogin ? 'Sign in to manage your wedding' : 'Join thousands of happy couples today'}
-          </p>
+          <span className="text-3xl font-bold tracking-tight">ShaadiFlow</span>
         </div>
 
+        {/* Hero Section */}
+        <div className="relative z-10 max-w-2xl mb-12">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-[5.5rem] font-bold leading-[1.1] tracking-tight"
+          >
+            The Digital <br />
+            <span className="text-[#facc15]">Concierge</span> for Your <br />
+            Special Day.
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-white/60 mt-8 text-xl md:text-2xl max-w-lg font-medium leading-relaxed"
+          >
+            Manage your wedding guests effortlessly. From RSVPs to seating charts, orchestrate every detail with regal precision.
+          </motion.p>
+        </div>
+
+        {/* Stats Card Overlay (Matches image exactly) */}
         <motion.div
-           layout
-           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-10 shadow-2xl shadow-slate-200/50 dark:shadow-none"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+          className="relative z-10 mt-auto bg-white/10 backdrop-blur-xl border border-white/15 rounded-[2.5rem] p-7 max-w-md flex items-center gap-6 shadow-2xl"
         >
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <div className="flex -space-x-4 overflow-hidden">
+            <img className="inline-block h-14 w-14 rounded-full ring-4 ring-[#3b0764] object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80" alt="Avatar 1" />
+            <img className="inline-block h-14 w-14 rounded-full ring-4 ring-[#3b0764] object-cover" src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80" alt="Avatar 2" />
+            <div className="h-14 w-14 rounded-full ring-4 ring-[#3b0764] bg-[#facc15] flex items-center justify-center text-[11px] font-black text-white uppercase italic">VIP</div>
+          </div>
+          <div>
+            <p className="text-[1.3rem] font-bold">1,240 Guests Managed</p>
+            <p className="text-[13px] text-white/50 uppercase tracking-[0.2em] font-bold mt-1">Trusted by elite planners worldwide</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Right Login Side */}
+      <div className="w-full md:w-[45%] flex flex-col items-center justify-center p-6 md:p-12">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-lg bg-white rounded-[3.5rem] p-12 md:p-16 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-50"
+        >
+          <div className="mb-12">
+            <h2 className="text-[2.5rem] font-bold text-slate-900 leading-tight">Welcome Back</h2>
+            <p className="text-slate-500 text-lg font-medium mt-2">Continue managing your celebration.</p>
+          </div>
+
+          <form className="space-y-8" onSubmit={handleLogin}>
             {error && (
-              <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold uppercase tracking-widest border border-rose-100 animate-shake">
+              <div className="p-4 bg-rose-50 text-rose-600 rounded-3xl text-[11px] font-bold uppercase tracking-widest border border-rose-100 animate-shake">
                 {error}
               </div>
             )}
 
-            {!isLogin && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" size={20} />
-                  <input 
-                    type="text" 
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-slate-900 dark:text-white font-medium"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-slate-600 uppercase tracking-wide ml-1">Wedding Admin Email</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" size={20} />
-                <input 
-                  type="email" 
-                  placeholder="name@example.com"
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3b0764] transition-colors" size={22} />
+                <input
+                  type="email"
+                  placeholder="planner@wedding.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-slate-900 dark:text-white font-medium"
+                  className="w-full pl-14 pr-6 py-5 bg-[#f1f5f9] border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#3b0764]/20 focus:bg-white transition-all text-slate-900 font-medium text-lg placeholder:text-slate-400"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between ml-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Password</label>
-                {isLogin && <button type="button" className="text-[10px] font-bold text-pink-600 hover:text-pink-700 uppercase tracking-widest">Forgot Password?</button>}
+                <label className="text-sm font-bold text-slate-600 uppercase tracking-wide">Secure Passkey</label>
+                <button type="button" className="text-[11px] font-extrabold text-[#3b0764] hover:text-purple-950 transition-colors">Forgot Access?</button>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" size={20} />
-                <input 
-                  type="password" 
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3b0764] transition-colors" size={22} />
+                <input
+                  type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-slate-900 dark:text-white font-medium"
+                  className="w-full pl-14 pr-6 py-5 bg-[#f1f5f9] border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#3b0764]/20 focus:bg-white transition-all text-slate-900 font-medium text-lg placeholder:text-slate-400"
                   required
                 />
               </div>
             </div>
 
-            <button 
+            <div className="flex items-center gap-3 ml-1">
+              <input
+                type="checkbox"
+                id="remember"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+                className="w-5 h-5 rounded-lg border-slate-300 text-[#3b0764] focus:ring-[#3b0764]/20"
+              />
+              <label htmlFor="remember" className="text-lg font-medium text-slate-500 cursor-pointer">Remember this device</label>
+            </div>
+
+            <button
               disabled={loading}
-              className={`w-full py-5 rounded-2xl font-black text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
-                loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-              }`}>
-              {loading ? 'Authenticating...' : (isLogin ? 'Sign In' : 'Create Account')}
-              {!loading && <ArrowRight size={20} />}
+              className={`w-full py-6 rounded-3xl font-bold text-[1.4rem] shadow-[0_10px_20px_rgba(59,7,100,0.2)] hover:shadow-[0_15px_30px_rgba(59,7,100,0.3)] hover:-translate-y-1 active:translate-y-0 transition-all flex items-center justify-center gap-3 ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-[#3b0764] text-white'
+                }`}>
+              {loading ? 'Authenticating...' : (
+                <>
+                  Login <LogIn size={24} className="ml-1" />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-center text-sm text-slate-500 font-medium mb-6">Or continue with</p>
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-3 py-3 px-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300 font-bold text-sm shadow-sm group">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                Google
-              </button>
-              <button className="flex items-center justify-center gap-3 py-3 px-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300 font-bold text-sm shadow-sm group">
-                <div className="w-5 h-5 bg-slate-900 rounded-full" />
-                Github
-              </button>
+          <div className="relative my-10">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-100"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-6 text-slate-400 font-bold tracking-[0.3em]">OR</span>
             </div>
           </div>
+
+          <button
+            type="button"
+            className="w-full py-6 border-2 border-[#facc15]/50 rounded-3xl font-bold text-[1.4rem] text-slate-900 hover:bg-[#fefce8] hover:border-[#facc15] transition-all flex items-center justify-center gap-4"
+          >
+            <Sparkles className="text-[#facc15] fill-[#facc15]/10" size={24} />
+            Create Wedding
+          </button>
+
+          <p className="text-center mt-12 text-lg font-medium text-slate-500">
+            Need assistance? <button className="text-[#3b0764] hover:text-purple-800 font-bold underline underline-offset-4 decoration-2 decoration-[#3b0764]/20">Contact Concierge</button>
+          </p>
         </motion.div>
 
-        <p className="text-center mt-10 text-sm font-medium text-slate-500">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}
-          <button 
-            className="ml-2 text-pink-600 hover:text-pink-700 font-black"
-            onClick={() => setIsLogin(!isLogin)}
-          >
-            {isLogin ? 'Sign Up' : 'Sign In'}
-          </button>
-        </p>
+        {/* Home Link for desktop (subtle) */}
+        <Link to="/" className="mt-12 flex items-center gap-3 text-slate-400 hover:text-slate-600 transition-colors">
+          <ChevronLeft size={20} />
+          <span className="text-xs font-bold uppercase tracking-[0.2em] leading-none">Back to Website</span>
+        </Link>
       </div>
     </div>
   );
 };
 
 export default LoginPage;
+
+
