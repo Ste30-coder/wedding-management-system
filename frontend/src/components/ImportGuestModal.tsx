@@ -11,7 +11,6 @@ interface ImportGuestModalProps {
 }
 
 const ImportGuestModal: React.FC<ImportGuestModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { weddingId, sideId } = useWeddingStore();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);

@@ -8,8 +8,7 @@ import {
   Pencil, 
   Zap, 
   Hourglass, 
-  MessageSquare,
-  ChevronRight
+  MessageSquare
 } from 'lucide-react';
 
 const AutomationsPage: React.FC = () => {

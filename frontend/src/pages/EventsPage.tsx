@@ -4,13 +4,9 @@ import {
   Plus, 
   MapPin, 
   Calendar as CalendarIcon, 
-  Users, 
   CheckCircle2, 
-  Clock, 
   Heart, 
-  PartyPopper,
   Map,
-  Settings,
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';

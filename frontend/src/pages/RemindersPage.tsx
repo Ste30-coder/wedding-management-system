@@ -1,12 +1,10 @@
 import React from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { motion } from 'framer-motion';
 import { 
   Bell, 
   Settings, 
   AlertCircle, 
   CheckCircle2, 
-  RotateCcw,
   Sparkles
 } from 'lucide-react';
 import { useWeddingStore } from '../store/useWeddingStore';

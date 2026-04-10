@@ -1,24 +1,16 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { 
-  Plus, 
   Rocket, 
-  Send, 
-  Hash, 
-  Calendar, 
-  User, 
   Link, 
   Smile, 
-  Type, 
-  Underline, 
   Bold, 
   Italic,
-  CheckCircle2,
   ChevronRight
 } from 'lucide-react';
 
 const CampaignsPage: React.FC = () => {
-  const [step, setStep] = useState(1);
+  const [step] = useState(1);
   const [selectedSide, setSelectedSide] = useState('Both Sides');
   const [message, setMessage] = useState(`Namaste {{name}}! 🌸
 

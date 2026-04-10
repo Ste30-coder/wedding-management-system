@@ -9,8 +9,7 @@ import {
   Plus, 
   ArrowLeft,
   Phone,
-  Mail,
-  Tag
+  Mail
 } from 'lucide-react';
 import { useWeddingStore } from '../store/useWeddingStore';
 import { useGuests } from '../hooks/useGuests';
@@ -19,7 +18,7 @@ import AddGuestModal from '../components/AddGuestModal';
 
 const GuestManagementPage: React.FC = () => {
   const { activeSide } = useWeddingStore();
-  const { guests, fetchGuests, loading, error } = useGuests();
+  const { guests, fetchGuests, loading } = useGuests();
   const isBride = activeSide === 'BRIDE';
   const navigate = useNavigate();
   

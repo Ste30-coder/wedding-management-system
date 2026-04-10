@@ -52,14 +52,22 @@ export function useDashboard() {
             currentWeddingId = firstWedding.id;
             
             // Set the first wedding in store
+            // Also find the sides
+            const brideSideId = firstWedding.sides?.find((s: any) => s.name.toLowerCase() === 'bride')?.id || '';
+            const groomSideId = firstWedding.sides?.find((s: any) => s.name.toLowerCase() === 'groom')?.id || '';
+
+            // Set the first wedding in store
             const { setWedding, setActiveSide } = useWeddingStore.getState();
-            setWedding(firstWedding.id, `${firstWedding.brideName} & ${firstWedding.groomName}`);
+            setWedding(
+              firstWedding.id, 
+              `${firstWedding.brideName} & ${firstWedding.groomName}`,
+              brideSideId,
+              groomSideId
+            );
             
-            // Also find the first side
-            if (firstWedding.sides && firstWedding.sides.length > 0) {
-              const firstSide = firstWedding.sides.find((s: any) => s.name === 'bride') || firstWedding.sides[0];
-              currentSideId = firstSide.id;
-              setActiveSide('BRIDE', firstSide.id);
+            if (brideSideId) {
+              currentSideId = brideSideId;
+              setActiveSide('BRIDE', brideSideId);
             }
           }
         }
