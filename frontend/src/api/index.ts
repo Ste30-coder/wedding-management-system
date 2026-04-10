@@ -23,14 +23,14 @@ api.interceptors.response.use(
     // Check if the server says the session is dead (401 or 403)
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       console.warn('Authentication expired or invalid. Cleaning up session...');
-      
+
       // Wipe the dead session from storage
       localStorage.removeItem('wedding_auth_token');
       localStorage.removeItem('wedding_user');
-      
+
       // Redirect to login ONLY if we're not already there (to avoid infinite refresh)
       if (!window.location.pathname.includes('/login')) {
-         window.location.href = '/login';
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
