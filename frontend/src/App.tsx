@@ -8,7 +8,9 @@ import RSVPPage from './pages/RSVPPage';
 import CampaignsPage from './pages/CampaignsPage';
 import RSVPsDashboardPage from './pages/RSVPsDashboardPage';
 import RemindersPage from './pages/RemindersPage';
+import EventsPage from './pages/EventsPage';
 import SettingsPage from './pages/SettingsPage';
+import AutomationsPage from './pages/AutomationsPage';
 
 const App: React.FC = () => {
   return (
@@ -21,7 +23,9 @@ const App: React.FC = () => {
         <Route path="/campaigns" element={<CampaignsPage />} />
         <Route path="/rsvps" element={<RSVPsDashboardPage />} />
         <Route path="/reminders" element={<RemindersPage />} />
+        <Route path="/events" element={<EventsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/automations" element={<AutomationsPage />} />
         <Route path="/rsvp/:id" element={<RSVPPage />} />
         <Route path="*" element={<LoginPage />} />
       </Routes>
